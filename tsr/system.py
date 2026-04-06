@@ -188,7 +188,7 @@ class TSR(BaseModule):
                 self.isosurface_helper.points_range,
                 (-self.renderer.cfg.radius, self.renderer.cfg.radius),
             )
-            color = None
+            vertex_colors = None
             if has_vertex_color:
                 with torch.no_grad():
                     color = self.renderer.query_triplane(
@@ -196,10 +196,14 @@ class TSR(BaseModule):
                         v_pos,
                         scene_code,
                     )["color"]
+                # Trimesh/GLB expects 8-bit colors; float colors in [0, 1] can appear black.
+                color = (color.clamp(0.0, 1.0) * 255.0).to(torch.uint8)
+                alpha = torch.full((color.shape[0], 1), 255, dtype=torch.uint8, device=color.device)
+                vertex_colors = torch.cat([color, alpha], dim=-1).cpu().numpy()
             mesh = trimesh.Trimesh(
                 vertices=v_pos.cpu().numpy(),
                 faces=t_pos_idx.cpu().numpy(),
-                vertex_colors=color.cpu().numpy() if has_vertex_color else None,
+                vertex_colors=vertex_colors,
             )
             meshes.append(mesh)
         return meshes
