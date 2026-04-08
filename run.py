@@ -189,3 +189,6 @@ for i, image in enumerate(images):
         timer.start("Exporting mesh")
         meshes[0].export(out_mesh_path)
         timer.end("Exporting mesh")
+
+
+# python .\run.py .\examples\poly_fox.png --model-save-format glb   for added colours
